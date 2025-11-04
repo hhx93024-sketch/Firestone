@@ -8,6 +8,7 @@ This project is a local, file-based database that mimics some of the functionali
 - File uploads
 - WebSocket for real-time communication
 - Accessible from other devices on the same network
+- Rate limiting (30 requests per minute per IP)
 
 ## Getting Started
 

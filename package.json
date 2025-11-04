@@ -21,6 +21,7 @@
   "homepage": "https://github.com/hhx93024-sketch/Firestone#readme",
   "dependencies": {
     "express": "^5.1.0",
+    "express-rate-limit": "^8.2.1",
     "multer": "^2.0.2",
     "uuid": "^13.0.0",
     "ws": "^8.18.3"
