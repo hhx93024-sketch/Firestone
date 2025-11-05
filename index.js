@@ -42,7 +42,91 @@ app.use('/:collection/:id', limiter);
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
 
-// CRUD Operations
+// Collection and File Upload Routes
+app.post('/create2929/:collection', (req, res) => {
+    try {
+        const { collection } = req.params;
+        const resolvedDbDir = path.resolve(dbDir);
+        const collectionDir = path.resolve(resolvedDbDir, collection);
+
+        if (!collectionDir.startsWith(resolvedDbDir)) {
+            return res.status(400).json({ error: 'Invalid collection' });
+        }
+
+        if (fs.existsSync(collectionDir)) {
+            return res.status(409).json({ error: 'Collection already exists' });
+        }
+
+        fs.mkdirSync(collectionDir, { recursive: true });
+        res.status(201).json({ message: `Collection '${collection}' created successfully` });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+app.get('/2929collection', (req, res) => {
+    try {
+        const collections = fs.readdirSync(dbDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        res.json(collections);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve collections' });
+    }
+});
+
+app.post('/upload', upload.single('file'), async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    try {
+        const { buffer, originalname, mimetype } = req.file;
+        const { referenceId } = req.body;
+        const id = uuidv4();
+        const createdAt = new Date().toISOString();
+        const subDir1 = id.substring(0, 2);
+        const subDir2 = id.substring(2, 4);
+        const fileDir = path.join(uploadsDir, subDir1, subDir2);
+        if (!fs.existsSync(fileDir)) {
+            fs.mkdirSync(fileDir, { recursive: true });
+        }
+        const filePath = path.join(fileDir, `${id}${path.extname(originalname)}`);
+        fs.writeFileSync(filePath, buffer);
+
+        const metadata = {
+            id,
+            createdAt,
+            originalName: originalname,
+            fileType: mimetype,
+            referenceId: referenceId || null,
+            blurhash: null,
+            url: `/uploads/${subDir1}/${subDir2}/${id}${path.extname(originalname)}`,
+        };
+
+        if (mimetype.startsWith('image/')) {
+            const { data, info } = await sharp(buffer).raw().ensureAlpha().toBuffer({ resolveWithObject: true });
+            metadata.blurhash = encode(new Uint8ClampedArray(data), info.width, info.height, 4, 4);
+        }
+
+        const filesCollectionDir = path.join(dbDir, 'files');
+        if (!fs.existsSync(filesCollectionDir)) {
+            fs.mkdirSync(filesCollectionDir, { recursive: true });
+        }
+        const metadataFilePath = getDocPath(filesCollectionDir, id);
+        const metadataDir = path.dirname(metadataFilePath);
+        if (!fs.existsSync(metadataDir)) {
+            fs.mkdirSync(metadataDir, { recursive: true });
+        }
+        fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2));
+
+        res.status(201).json(metadata);
+    } catch (error) {
+        res.status(500).json({ error: `Failed to process file: ${error.message}` });
+    }
+});
+
+// Document CRUD Operations
 
 const getDocPath = (collectionDir, id) => {
     const subDir1 = id.substring(0, 2);
@@ -189,92 +273,6 @@ app.delete('/:collection/:id', (req, res) => {
     }
 });
 
-// Create a collection
-app.post('/create2929/:collection', (req, res) => {
-    try {
-        const { collection } = req.params;
-        const resolvedDbDir = path.resolve(dbDir);
-        const collectionDir = path.resolve(resolvedDbDir, collection);
-
-        if (!collectionDir.startsWith(resolvedDbDir)) {
-            return res.status(400).json({ error: 'Invalid collection' });
-        }
-
-        if (fs.existsSync(collectionDir)) {
-            return res.status(409).json({ error: 'Collection already exists' });
-        }
-
-        fs.mkdirSync(collectionDir, { recursive: true });
-        res.status(201).json({ message: `Collection '${collection}' created successfully` });
-    } catch (error) {
-        res.status(400).json({ error: error.message });
-    }
-});
-
-// Get all collections
-app.get('/2929collection', (req, res) => {
-    try {
-        const collections = fs.readdirSync(dbDir, { withFileTypes: true })
-            .filter(dirent => dirent.isDirectory())
-            .map(dirent => dirent.name);
-        res.json(collections);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to retrieve collections' });
-    }
-});
-
-
-// File upload
-app.post('/upload', upload.single('file'), async (req, res) => {
-    if (!req.file) {
-        return res.status(400).json({ error: 'No file uploaded' });
-    }
-
-    try {
-        const { buffer, originalname, mimetype } = req.file;
-        const { referenceId } = req.body;
-        const id = uuidv4();
-        const createdAt = new Date().toISOString();
-        const subDir1 = id.substring(0, 2);
-        const subDir2 = id.substring(2, 4);
-        const fileDir = path.join(uploadsDir, subDir1, subDir2);
-        if (!fs.existsSync(fileDir)) {
-            fs.mkdirSync(fileDir, { recursive: true });
-        }
-        const filePath = path.join(fileDir, `${id}${path.extname(originalname)}`);
-        fs.writeFileSync(filePath, buffer);
-
-        const metadata = {
-            id,
-            createdAt,
-            originalName: originalname,
-            fileType: mimetype,
-            referenceId: referenceId || null,
-            blurhash: null,
-            url: `/uploads/${subDir1}/${subDir2}/${id}${path.extname(originalname)}`,
-        };
-
-        if (mimetype.startsWith('image/')) {
-            const { data, info } = await sharp(buffer).raw().ensureAlpha().toBuffer({ resolveWithObject: true });
-            metadata.blurhash = encode(new Uint8ClampedArray(data), info.width, info.height, 4, 4);
-        }
-
-        const filesCollectionDir = path.join(dbDir, 'files');
-        if (!fs.existsSync(filesCollectionDir)) {
-            fs.mkdirSync(filesCollectionDir, { recursive: true });
-        }
-        const metadataFilePath = getDocPath(filesCollectionDir, id);
-        const metadataDir = path.dirname(metadataFilePath);
-        if (!fs.existsSync(metadataDir)) {
-            fs.mkdirSync(metadataDir, { recursive: true });
-        }
-        fs.writeFileSync(metadataFilePath, JSON.stringify(metadata, null, 2));
-
-        res.status(201).json(metadata);
-    } catch (error) {
-        res.status(500).json({ error: `Failed to process file: ${error.message}` });
-    }
-});
 
 // WebSocket connection
 wss.on('connection', (ws) => {
