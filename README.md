@@ -55,6 +55,8 @@ You can use the `api.http` file with a REST client like [Visual Studio Code REST
 
 - **Upload a file:** `POST /upload`
 
+When uploading a file, you can also provide an optional `referenceId` field in the multipart form data. The server will automatically generate metadata for the uploaded file, including a unique ID, the file type, a timestamp, and a BlurHash for images. The response will be a JSON object containing this metadata.
+
 ### WebSocket
 
 You can connect to the WebSocket server at `ws://<your-ip-address>:3000`. Any message sent to the server will be broadcast to all other connected clients.
