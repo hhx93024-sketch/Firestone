@@ -195,6 +195,41 @@ app.delete('/:collection/:id', (req, res) => {
     }
 });
 
+// Create a collection
+app.post('/create2929/:collection', (req, res) => {
+    try {
+        const { collection } = req.params;
+        const resolvedDbDir = path.resolve(dbDir);
+        const collectionDir = path.resolve(resolvedDbDir, collection);
+
+        if (!collectionDir.startsWith(resolvedDbDir)) {
+            return res.status(400).json({ error: 'Invalid collection' });
+        }
+
+        if (fs.existsSync(collectionDir)) {
+            return res.status(409).json({ error: 'Collection already exists' });
+        }
+
+        fs.mkdirSync(collectionDir, { recursive: true });
+        res.status(201).json({ message: `Collection '${collection}' created successfully` });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+});
+
+// Get all collections
+app.get('/2929collection', (req, res) => {
+    try {
+        const collections = fs.readdirSync(dbDir, { withFileTypes: true })
+            .filter(dirent => dirent.isDirectory())
+            .map(dirent => dirent.name);
+        res.json(collections);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve collections' });
+    }
+});
+
+
 // File upload
 app.post('/upload', upload.single('file'), (req, res) => {
   if (!req.file) {

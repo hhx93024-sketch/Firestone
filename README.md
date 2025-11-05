@@ -43,6 +43,8 @@ You can use the `api.http` file with a REST client like [Visual Studio Code REST
 
 ### Collections and Documents
 
+- **Create a collection:** `POST /create2929/:collection`
+- **Read all collections:** `GET /2929collection`
 - **Create a document:** `POST /:collection`
 - **Read all documents in a collection:** `GET /:collection`
 - **Read a single document:** `GET /:collection/:id`

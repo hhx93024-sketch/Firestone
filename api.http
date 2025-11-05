@@ -30,6 +30,12 @@ Content-Type: application/json
 ### Delete a user
 DELETE {{host}}/{{collection}}/{{userId}}
 
+### Create a new collection
+POST {{host}}/create2929/products
+
+### Get all collections
+GET {{host}}/2929collection
+
 ### Upload a file
 POST {{host}}/upload
 Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
