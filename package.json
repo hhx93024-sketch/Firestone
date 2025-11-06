@@ -21,6 +21,7 @@
   "homepage": "https://github.com/hhx93024-sketch/Firestone#readme",
   "dependencies": {
     "blurhash": "^2.0.5",
+    "chokidar": "^4.0.3",
     "express": "^4.17.1",
     "express-rate-limit": "^8.2.1",
     "multer": "^2.0.2",

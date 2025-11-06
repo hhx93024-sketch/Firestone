@@ -9,6 +9,7 @@ const { v4: uuidv4 } = require('uuid');
 const rateLimit = require('express-rate-limit');
 const sharp = require('sharp');
 const { encode } = require('blurhash');
+const chokidar = require('chokidar');
 
 const app = express();
 const server = http.createServer(app);
@@ -289,6 +290,36 @@ wss.on('connection', (ws) => {
 
   ws.on('close', () => {
     console.log('Client disconnected');
+  });
+});
+
+// File watcher for real-time updates
+const watcher = chokidar.watch(dbDir, {
+  ignored: /(^|[\/\\])\../, // ignore dotfiles
+  persistent: true,
+  ignoreInitial: true,
+});
+
+watcher.on('change', (filePath) => {
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      console.error('Error reading file:', err);
+      return;
+    }
+    try {
+      const updatedDoc = JSON.parse(data);
+      const message = JSON.stringify({
+        event: 'document-updated',
+        data: updatedDoc,
+      });
+      wss.clients.forEach((client) => {
+        if (client.readyState === WebSocket.OPEN) {
+          client.send(message);
+        }
+      });
+    } catch (parseError) {
+      console.error('Error parsing JSON:', parseError);
+    }
   });
 });
 

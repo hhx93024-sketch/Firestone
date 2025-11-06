@@ -6,7 +6,7 @@ This project is a local, file-based database that mimics some of the functionali
 
 - CRUD operations for documents
 - File uploads
-- WebSocket for real-time communication
+- WebSocket for real-time communication with automatic updates on document changes
 - Accessible from other devices on the same network
 - Rate limiting (30 requests per minute per IP)
 
@@ -59,4 +59,20 @@ When uploading a file, you can also provide an optional `referenceId` field in t
 
 ### WebSocket
 
-You can connect to the WebSocket server at `ws://<your-ip-address>:3000`. Any message sent to the server will be broadcast to all other connected clients.
+You can connect to the WebSocket server at `ws://<your-ip-address>:3000`.
+
+#### Real-Time Document Updates
+
+In addition to broadcasting messages sent by clients, the server will automatically send a message to all connected clients whenever a document in the database is updated. The message will be a JSON object with the following format:
+
+```json
+{
+  "event": "document-updated",
+  "data": {
+    "id": "...",
+    "createdAt": "...",
+    "updatedAt": "...",
+    ...
+  }
+}
+```
