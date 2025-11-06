@@ -38,6 +38,9 @@ const limiter = rateLimit({
 app.use('/:collection', limiter);
 app.use('/:collection/:id', limiter);
 
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client.html'));
+});
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage });

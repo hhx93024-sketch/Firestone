@@ -61,6 +61,8 @@ When uploading a file, you can also provide an optional `referenceId` field in t
 
 You can connect to the WebSocket server at `ws://<your-ip-address>:3000`.
 
+To easily test the real-time functionality, a client test page is available. With the server running, open your web browser and navigate to `http://localhost:3000`. Open the developer console to see the log of incoming WebSocket messages.
+
 #### Real-Time Document Events
 
 In addition to broadcasting messages sent by clients, the server will automatically send a message to all connected clients whenever a document is created, updated, or deleted.
