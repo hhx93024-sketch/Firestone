@@ -176,6 +176,17 @@ app.post('/:collection', (req, res) => {
             fs.mkdirSync(dir, { recursive: true });
         }
         fs.writeFileSync(filePath, JSON.stringify(doc, null, 2));
+
+        const message = JSON.stringify({
+            event: 'document-created',
+            data: doc,
+        });
+        wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+
         res.status(201).json(doc);
     } catch (error) {
         res.status(400).json({ error: error.message });
@@ -278,6 +289,17 @@ app.delete('/:collection/:id', (req, res) => {
             return res.status(404).json({ error: 'Document not found' });
         }
         fs.unlinkSync(filePath);
+
+        const message = JSON.stringify({
+            event: 'document-deleted',
+            data: { id },
+        });
+        wss.clients.forEach((client) => {
+            if (client.readyState === WebSocket.OPEN) {
+                client.send(message);
+            }
+        });
+
         res.status(204).send();
     } catch (error) {
         res.status(400).json({ error: error.message });

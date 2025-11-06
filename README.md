@@ -61,9 +61,36 @@ When uploading a file, you can also provide an optional `referenceId` field in t
 
 You can connect to the WebSocket server at `ws://<your-ip-address>:3000`.
 
-#### Real-Time Document Updates
+#### Real-Time Document Events
 
-In addition to broadcasting messages sent by clients, the server will automatically send a message to all connected clients whenever a document in the database is updated. The message will be a JSON object with the following format:
+In addition to broadcasting messages sent by clients, the server will automatically send a message to all connected clients whenever a document is created, updated, or deleted.
+
+When a document is created, the message will have the following format:
+
+```json
+{
+  "event": "document-created",
+  "data": {
+    "id": "...",
+    "createdAt": "...",
+    "updatedAt": "...",
+    ...
+  }
+}
+```
+
+When a document is deleted, the message will have the following format:
+
+```json
+{
+  "event": "document-deleted",
+  "data": {
+    "id": "..."
+  }
+}
+```
+
+When a document is updated, the message will have the following format:
 
 ```json
 {
