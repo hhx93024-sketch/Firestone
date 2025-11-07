@@ -312,20 +312,45 @@ app.delete('/:collection/:id', (req, res) => {
 
 // WebSocket connection
 wss.on('connection', (ws) => {
-  console.log('Client connected');
+    console.log('Client connected');
 
-  ws.on('message', (message) => {
-    console.log(`Received message: ${message}`);
-    wss.clients.forEach((client) => {
-      if (client !== ws && client.readyState === WebSocket.OPEN) {
-        client.send(message.toString());
-      }
+    ws.on('message', (message) => {
+        try {
+            const parsedMessage = JSON.parse(message);
+
+            if (parsedMessage.event === 'update-document') {
+                const { collection, id, patch } = parsedMessage.data;
+                const collectionDir = path.resolve(dbDir, collection);
+                const filePath = getDocPath(collectionDir, id);
+
+                if (fs.existsSync(filePath)) {
+                    const doc = JSON.parse(fs.readFileSync(filePath));
+                    const updatedDoc = { ...doc, ...patch, updatedAt: new Date().toISOString() };
+                    fs.writeFileSync(filePath, JSON.stringify(updatedDoc, null, 2));
+
+                    // Broadcast the patch to other clients
+                    wss.clients.forEach((client) => {
+                        if (client !== ws && client.readyState === WebSocket.OPEN) {
+                            client.send(JSON.stringify(parsedMessage));
+                        }
+                    });
+                }
+            } else {
+                // Broadcast other messages to other clients
+                wss.clients.forEach((client) => {
+                    if (client !== ws && client.readyState === WebSocket.OPEN) {
+                        client.send(JSON.stringify(parsedMessage));
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Failed to process WebSocket message:', error);
+        }
     });
-  });
 
-  ws.on('close', () => {
-    console.log('Client disconnected');
-  });
+    ws.on('close', () => {
+        console.log('Client disconnected');
+    });
 });
 
 

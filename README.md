@@ -65,7 +65,31 @@ To easily test the real-time functionality, a client test page is available. Wit
 
 #### Real-Time Document Events
 
-In addition to broadcasting messages sent by clients, the server will automatically send a message to all connected clients whenever a document is created, updated, or deleted.
+The server supports two modes of real-time communication:
+
+1.  **Event Broadcasting (Server to Client):** The server will automatically send a message to all connected clients whenever a document is created, updated, or deleted via the REST API.
+2.  **Real-Time Collaboration (Client to Server to Clients):** For collaborative applications like a custom sheet, clients can send partial updates (patches) over the WebSocket. The server will apply the patch to the document and then broadcast that same patch to all other connected clients.
+
+##### Real-Time Collaboration
+
+To update a document in real-time, a client should send a WebSocket message with the following format:
+
+```json
+{
+  "event": "update-document",
+  "data": {
+    "collection": "your-collection-name",
+    "id": "your-document-id",
+    "patch": {
+      "keyToUpdate": "newValue"
+    }
+  }
+}
+```
+
+The server will apply the `patch` to the specified document and then broadcast the original message to all other clients so they can update their state.
+
+##### Event Broadcasting
 
 When a document is created, the message will have the following format:
 
