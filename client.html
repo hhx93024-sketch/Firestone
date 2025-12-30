@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test Client</title>
+</head>
+<body>
+    <h1>WebSocket Test Client</h1>
+    <p>Open your browser's developer console to see real-time messages from the server.</p>
+
+    <form id="updateForm">
+        <h2>Send Document Update</h2>
+        <input type="text" id="collection" placeholder="Collection" required><br>
+        <input type="text" id="documentId" placeholder="Document ID" required><br>
+        <textarea id="patch" placeholder='{"key": "value"}' required></textarea><br>
+        <button type="submit">Send Update</button>
+    </form>
+
+    <script>
+        const ws = new WebSocket('ws://localhost:3000');
+
+        ws.onopen = () => {
+            console.log('Connected to WebSocket server');
+        };
+
+        ws.onmessage = (event) => {
+            console.log('Message from server:', JSON.parse(event.data));
+        };
+
+        ws.onclose = () => {
+            console.log('Disconnected from WebSocket server');
+        };
+
+        ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+        };
+
+        document.getElementById('updateForm').addEventListener('submit', (event) => {
+            event.preventDefault();
+            const collection = document.getElementById('collection').value;
+            const id = document.getElementById('documentId').value;
+            const patch = JSON.parse(document.getElementById('patch').value);
+
+            const message = {
+                event: 'update-document',
+                data: {
+                    collection,
+                    id,
+                    patch,
+                },
+            };
+
+            ws.send(JSON.stringify(message));
+        });
+    </script>
+</body>
+</html>
